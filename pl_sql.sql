@@ -73,13 +73,7 @@ END;
 BEGIN
    insertDATA('D13','14-JAN-2016','movie','video1','3gp','560MiB');
 END;
----
-
-
-
-
-
-
+/*---Doubt---
 CREATE OR REPLACE PROCEDURE insertDATA(
 	   u_dataid IN DATA.DATA_ID%TYPE,
 	   u_datemodified IN DATA.DATE_MODIFIED%TYPE,
@@ -89,34 +83,51 @@ CREATE OR REPLACE PROCEDURE insertDATA(
     u_filesize IN DATA.FILE_SIZE%TYPE)
 IS
 BEGIN
-
-  INSERT INTO DATA ("DATA_ID","DATE_MODIFIED","DESCRIPTION","FILE_NAME","TYPE","FILE_SIZE")
-  VALUES (u_dataid,u_datemodified,u_description,u_filename,u_type,u_filesize);
-
-  COMMIT;
-
-END;
-DECLARE
-u_dataid DATA.DATA_ID%TYPE,
-u_datemodified DATA.DATE_MODIFIED%TYPE,
-u_description DATA.DESCRIPTION%TYPE,
-u_filename DATA.FILE_NAME%TYPE,
-u_type DATA.TYPE%TYPE,
-u_filesize DATA.FILE_SIZE%TYPE
-BEGIN
   u_dataid:=&u_dataid;
   u_datemodified:=&u_datemodified;
   u_description:=&u_description;
   u_filename:=&u_filename;
   u_type:=&u_type;
   u_filesize:=&u_filesize;
+   insertDATA(u_dataid,u_datemodified,u_description,u_filename,u_type,u_filename);
+END;
+BEGIN
+
   INSERT INTO DATA ("DATA_ID","DATE_MODIFIED","DESCRIPTION","FILE_NAME","TYPE","FILE_SIZE")
   VALUES (u_dataid,u_datemodified,u_description,u_filename,u_type,u_filesize);
 
   COMMIT;
 
+END;*/
+---
+CREATE OR REPLACE TRIGGER display_MAX_USERS_changes
+BEFORE DELETE OR INSERT OR UPDATE ON HUB
+FOR EACH ROW
+WHEN (NEW.MAX_USERS > 1000)
+DECLARE
+   MAX_USERS_diff number;
+BEGIN
+   MAX_USERS_diff := :NEW.MAX_USERS  - :OLD.MAX_USERS;
+   dbms_output.put_line('Old MAX_USERS: ' || :OLD.MAX_USERS);
+   dbms_output.put_line('New MAX_USERS: ' || :NEW.MAX_USERS);
+   dbms_output.put_line('MAX_USERS difference: ' || MAX_USERS_diff);
 END;
 ---
+set serveroutput on;
+INSERT INTO HUB
+VALUES('dcashfub.co.uk','werocks','uk hub','uk','4.2PiB',10000,2);
+---
+CREATE OR REPLACE TRIGGER INSERT_TRIGGER
+AFTER INSERT ON USERS
 BEGIN
-   insertDATA('D12','14-JAN-2016','movie','video1','3gp','560MiB');
+DBMS_OUTPUT.PUT_LINE('NEW USER ENTERED');
 END;
+---
+CREATE OR REPLACE TRIGGER RESTRICT_UPLAODS
+BEFORE INSERT ON UPLOADS
+BEGIN
+IF(TO_CHAR(SYSDATE,'HH24:MI')NOT BETWEEN '09:00' AND '18:00') THEN
+RAISE_APPLICATION_ERROR(-2010,'UPLAOD NOT ALLOWED');
+END IF;
+END;
+---
