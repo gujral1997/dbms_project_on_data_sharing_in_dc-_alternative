@@ -1,17 +1,17 @@
- ---
+ ---CURSOR THAT UPLOADS ALL THE ENTRIES INSIDE CRC_CHECKED OF TABLE UPLAODS TO "YES"
  DECLARE
     total_rows number(3);
  BEGIN
     UPDATE UPLOADS
     SET CRC_CHECKED = 'YES';
     IF sql%notfound THEN
-       dbms_output.put_line('no DATA selected');
+       dbms_output.put_line('No DATA selected');
     ELSIF sql%found THEN
        total_rows := sql%rowcount;
        dbms_output.put_line( total_rows || ' DATA selected ');
     END IF;
  END;
----
+--CURSOR USED TO RETRIEVE THE DETAILED INFORMATION OF THE USERS WHO ARE CONNECTED TO ATLEAST ONE HUB
 DECLARE
    u_list hub_list.LIST_URL%type;
    u_url hub.URL_ADDRESS%type;
@@ -38,10 +38,10 @@ BEGIN
    CLOSE userdata;
 END;
 
----
+---CURSOR THAT COUNTS THE NUMBER OF USERS REGISTERED AT DC++
 DECLARE
   cur sys_refcursor;
-  cur_rec sp%rowtype;
+  cur_rec USERS%rowtype;
 BEGIN
   OPEN cur FOR
   SELECT * FROM USERS;
@@ -52,7 +52,7 @@ BEGIN
   END LOOP;
   dbms_output.put_line('Total no of users registered at dc++: ' || cur%rowcount);
 END;
----
+---PROCEDURE FOR INSERTING DATA IN DATA TABLE
 CREATE OR REPLACE PROCEDURE insertDATA(
 	   u_dataid IN DATA.DATA_ID%TYPE,
 	   u_datemodified IN DATA.DATE_MODIFIED%TYPE,
@@ -99,7 +99,7 @@ BEGIN
   COMMIT;
 
 END;*/
----
+---TRIGGER THAT TELLS THE UPDATE DONE IN MAX USER CAPACITY IN HUB TABLE
 CREATE OR REPLACE TRIGGER display_MAX_USERS_changes
 BEFORE DELETE OR INSERT OR UPDATE ON HUB
 FOR EACH ROW
@@ -116,18 +116,40 @@ END;
 set serveroutput on;
 INSERT INTO HUB
 VALUES('dcashfub.co.uk','werocks','uk hub','uk','4.2PiB',10000,2);
----
+---TRIGGER THAT NOTIFIES THAT NEW USER HAS REGISTERED TO DC++
 CREATE OR REPLACE TRIGGER INSERT_TRIGGER
 AFTER INSERT ON USERS
 BEGIN
 DBMS_OUTPUT.PUT_LINE('NEW USER ENTERED');
 END;
 ---
+INSERT INTO USERS
+VALUES('U1','codelover5','american','192.168.1.5','CONNECTED');
+---TRIGGER THAT DOESNT ALLOW UPLOAD BETWEEN 11 PM AND 6 AM
 CREATE OR REPLACE TRIGGER RESTRICT_UPLAODS
 BEFORE INSERT ON UPLOADS
 BEGIN
-IF(TO_CHAR(SYSDATE,'HH24:MI')NOT BETWEEN '09:00' AND '18:00') THEN
+IF(TO_CHAR(SYSDATE,'HH24:MI')NOT BETWEEN '23:00' AND '6:00') THEN
 RAISE_APPLICATION_ERROR(-2010,'UPLAOD NOT ALLOWED');
 END IF;
 END;
 ---
+INSERT INTO UPLOADS
+VALUES('D2','4','10s','2MiB/s','NO');
+--EXCEPTION thrown when MAX_USERS=1 DONT EXSISTS
+DECLARE
+   name HUB.NAME%type;
+   address HUB.URL_ADDRESS%type;
+BEGIN
+   SELECT  name, address INTO  name,address
+   FROM HUB
+   WHERE MAX_USERS = 1;
+   DBMS_OUTPUT.PUT_LINE ('Name: '||  name);
+   DBMS_OUTPUT.PUT_LINE ('Address: ' || address);
+
+EXCEPTION
+   WHEN no_data_found THEN
+      dbms_output.put_line('No such HUB!');
+   WHEN others THEN
+      dbms_output.put_line('Error!');
+END;
